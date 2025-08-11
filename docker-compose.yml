@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile 
-    env_file: resources/.env
     container_name: tg_bot
     volumes:
       - ./media:/app/media:ro
