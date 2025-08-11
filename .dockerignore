@@ -1,6 +1,4 @@
 todo.txt
 media/
 resources/
-*.bat
-*.sh
 .gitignore
