@@ -1,0 +1,5 @@
+.venv
+resources/tg_token.env
+resources/sheets_credentials.json
+resources/tickets.db
+todo.txt
