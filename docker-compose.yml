@@ -1,7 +1,6 @@
 services:
   bot:
     build: .
-    container_name: name
     volumes:
       - ./media:/app/media:ro
       - ./resources:/app/resources:rw
