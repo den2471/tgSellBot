@@ -3,6 +3,8 @@ PYTHON=python3
 VENV_DIR=".venv"
 REQUIREMENTS="requirements.txt"
 
+cd ..
+
 # Проверяем существование .venv
 if [ -d "$VENV_DIR/bin" ]; then
     echo "Found environment"

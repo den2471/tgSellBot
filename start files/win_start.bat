@@ -4,6 +4,8 @@ SET PYTHON=python
 SET VENV_DIR=.venv
 SET REQUIREMENTS=requirements.txt
 
+cd ..
+
 :: Проверяем существование .venv
 if exist "%VENV_DIR%\Scripts\activate" (
     echo Found environment
