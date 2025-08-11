@@ -4,6 +4,10 @@ import time
 import threading
 import random
 import inspect
+from dotenv import load_dotenv
+
+# load_dotenv("resources/.env")
+# load_dotenv("resources/tg_token.env")
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +120,3 @@ class MediaManager:
         except Exception as e:
             logger.error(f"{inspect.currentframe().f_code.co_name} - {inspect.currentframe().f_lineno}\nОшибка при выборе случайного рекламного файла: {e}")
             return None, None
-
-# Создаем глобальный экземпляр MediaManager
-media_manager = MediaManager() 

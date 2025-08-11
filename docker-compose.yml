@@ -1,9 +1,7 @@
 services:
   bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: tg_bot
+    build: .
+    container_name: name
     volumes:
-      - ${PWD}/media:/app/media:ro
-      - ${PWD}/resources:/app/resources:rw
+      - ./media:/app/media:ro
+      - ./resources:/app/resources:rw

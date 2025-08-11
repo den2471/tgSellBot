@@ -8,6 +8,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import ContextTypes
+from dotenv import load_dotenv
 import states
 import keyboards
 import inspect
@@ -16,9 +17,13 @@ from database import (
     WarrantyDb
 )
 from enum import Enum
-from media_handler import media_manager
+from media_handler import MediaManager
+
+# load_dotenv("resources/.env")
+# load_dotenv("resources/tg_token.env")
 
 logger = logging.getLogger(__name__)
+media_manager = MediaManager()
 tickets_db = TicketDb()
 warranty_db = WarrantyDb()
 

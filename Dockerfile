@@ -4,7 +4,7 @@ ENV CONTAINER=docker
 
 RUN apt-get update
 RUN pip install --upgrade pip
-COPY requirements.txt .
+COPY . .
 RUN pip install -r requirements.txt
 RUN apt-get install -y \
     libgl1 \
@@ -12,5 +12,4 @@ RUN apt-get install -y \
     libsm6 \
     libxrender1 \
     libxext6
-COPY . .
 CMD ["python", "bot.py"]

@@ -28,9 +28,23 @@ warnings.filterwarnings("ignore", category=PTBUserWarning, message=".*per_messag
 logger = logging.getLogger(__name__)
 
 # .env loading
-load_dotenv("resources/.env")
-load_dotenv("resources/tg_token.env")
-logger.info("Переменные загружены из .env")
+
+class ResourcesMissing(Exception):
+    pass
+
+env_path = "resources/.env"
+if os.path.exists(env_path):
+    load_dotenv(env_path)
+else:
+    raise ResourcesMissing('.env missing')
+
+tg_token_env = "resources/tg_token.env"
+if os.path.exists(tg_token_env):
+    load_dotenv(tg_token_env)
+else:
+    raise ResourcesMissing('tg_token.env missing')
+
+logger.info("Переменные загружены из resources/")
 
 import states
 import telegram
