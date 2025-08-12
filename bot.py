@@ -28,7 +28,6 @@ warnings.filterwarnings("ignore", category=PTBUserWarning, message=".*per_messag
 logger = logging.getLogger(__name__)
 
 # .env loading
-
 class ResourcesMissing(Exception):
     pass
 

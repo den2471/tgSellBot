@@ -4,10 +4,6 @@ import time
 import threading
 import random
 import inspect
-from dotenv import load_dotenv
-
-# load_dotenv("resources/.env")
-# load_dotenv("resources/tg_token.env")
 
 logger = logging.getLogger(__name__)
 

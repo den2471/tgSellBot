@@ -2,5 +2,5 @@ services:
   bot:
     build: .
     volumes:
-      - ./media:/app/media:ro
-      - ./resources:/app/resources:rw
+      - ./media:/usr/src/app/media:ro
+      - ./resources:/usr/src/app/resources:rw
