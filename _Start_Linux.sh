@@ -4,9 +4,9 @@ VENV_DIR=".venv"
 REQUIREMENTS="requirements.txt"
 
 echo "Checking updates"
-sh update.sh
+sh updateLinux.sh
 
-apt-get updateLinux.sh
+apt-get update
 pip install --upgrade pip
 
 # Проверяем существование .venv
