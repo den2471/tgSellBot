@@ -1,6 +1,9 @@
 services:
   bot:
     build: .
+    container_name: semi_docker
     volumes:
-      - ./media:/usr/src/app/media:ro
-      - ./resources:/usr/src/app/resources:rw
+      - ./:/usr/src/app
+    # volumes:
+    #   - ./media:/usr/src/app/media:ro
+    #   - ./resources:/usr/src/app/resources:rw
