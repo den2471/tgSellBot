@@ -3,7 +3,10 @@ PYTHON=python3
 VENV_DIR=".venv"
 REQUIREMENTS="requirements.txt"
 
-apt-get update
+echo "Checking updates"
+sh update.sh
+
+apt-get updateLinux.sh
 pip install --upgrade pip
 
 # Проверяем существование .venv
