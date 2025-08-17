@@ -4,7 +4,7 @@ VENV_DIR=".venv"
 REQUIREMENTS="requirements.txt"
 
 apt-get update
-pip install --upgrade pip --root-user-action
+pip install --upgrade pip --root-user-action ignore
 apt install git -y
 
 echo "Checking updates"
