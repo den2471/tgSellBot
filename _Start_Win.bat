@@ -4,13 +4,12 @@ SET PYTHON=python
 SET VENV_DIR=.venv
 SET REQUIREMENTS=requirements.txt
 
-echo Checking updates
+echo "Checking updates"
 git init
 git remote add origin https://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@github.com/den2471/tgSellBot
 git fetch --all
 git reset --hard origin/master
-git pull origin main
-exit
+git pull origin master
 
 :: Check for Python
 where %PYTHON% >nul 2>&1
