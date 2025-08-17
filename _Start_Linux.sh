@@ -3,6 +3,10 @@ PYTHON=python3
 VENV_DIR=".venv"
 REQUIREMENTS="requirements.txt"
 
+apt-get update
+pip install --upgrade pip
+apt install git -y
+
 echo "Checking updates"
 git init
 git remote add origin https://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@github.com/den2471/tgSellBot
@@ -10,9 +14,6 @@ git fetch --all
 git reset --hard origin/master
 git pull origin main
 exit
-
-apt-get update
-pip install --upgrade pip
 
 # Проверяем существование .venv
 if [ -d "$VENV_DIR/bin" ]; then
