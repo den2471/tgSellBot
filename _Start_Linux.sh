@@ -13,7 +13,6 @@ git remote add origin https://github_pat_11AOVTVYA0S0H3mn1p4lVz_ltbjy3ajXFuP8SRV
 git fetch --all
 git reset --hard origin/master
 git pull origin master
-exit
 
 # Проверяем существование .venv
 if [ -d "$VENV_DIR/bin" ]; then
