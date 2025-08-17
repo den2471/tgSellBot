@@ -24,6 +24,7 @@ if [ -d "$VENV_DIR/bin" ]; then
         echo "Setting up dependencies..."
         $PYTHON -m pip install -r "$REQUIREMENTS"
         apt-get install -y \
+            ffmpeg \
             libgl1 \
             libglib2.0-0 \
             libsm6 \
@@ -38,7 +39,8 @@ else
     source "$VENV_DIR/bin/activate"
     echo "Setting up dependencies..."
     $PYTHON -m pip install -r "$REQUIREMENTS"
-    RUN apt-get install -y \
+    apt-get install -y \
+            ffmpeg \
             libgl1 \
             libglib2.0-0 \
             libsm6 \
