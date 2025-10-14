@@ -3,7 +3,6 @@ import logging
 import datetime
 import inspect
 import re
-from oauth2client.service_account import ServiceAccountCredentials
 
 logger = logging.getLogger(__name__)
 

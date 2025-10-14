@@ -2,7 +2,6 @@ import keyboards
 import states
 import cv2
 import easyocr
-import string
 import states
 import keyboards
 import inspect
@@ -10,7 +9,6 @@ import logging
 import os
 import re
 import numpy as np
-from enum import Enum
 from database import WarrantyDb
 from telegram import Update
 from telegram.ext import ContextTypes

@@ -12,7 +12,6 @@ from database import (
     PackedData
 )
 from datetime import datetime
-from enum import Enum
 from media_handler import MediaManager
 from re_codes import Format
 
