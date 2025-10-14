@@ -1,12 +1,8 @@
 import sqlite3
 import logging
-from datetime import datetime, timedelta
-import os
-import string
-import random
+import datetime
 import inspect
-import keyboards
-import gspread
+import re
 from oauth2client.service_account import ServiceAccountCredentials
 
 logger = logging.getLogger(__name__)
@@ -17,6 +13,16 @@ class TicketDb:
         self.conn = sqlite3.connect(self.db_name)
         self.cursor = self.conn.cursor()
         self.create_tables()
+
+    def _close(self):
+        if self.conn:
+            self.conn.close()
+
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._close()
 
     def create_tables(self):
         """Initialize the database with required tables"""
@@ -70,7 +76,7 @@ class TicketDb:
         self.cursor.execute("""
         INSERT INTO tickets (user_id, ticket_id, description, photo_id, video_id, file_id, phone, date)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, ticket_id, description, photo_id, video_id, file_id, phone, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        """, (user_id, ticket_id, description, photo_id, video_id, file_id, phone, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         
         self.conn.commit()
 
@@ -83,7 +89,7 @@ class TicketDb:
         self.cursor.execute("""
         INSERT INTO ticket_responses (ticket_id, user_id, response_text, photo_id, video_id, file_id, date)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (ticket_id, user_id, response_text, photo_id, video_id, file_id, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        """, (ticket_id, user_id, response_text, photo_id, video_id, file_id, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         
         self.conn.commit()
 
@@ -91,7 +97,7 @@ class TicketDb:
         self.cursor.execute("""
         INSERT OR IGNORE INTO users (user_id, username, first_name, last_name, date_joined)
         VALUES (?, ?, ?, ?, ?)
-        """, (user_id, username, first_name, last_name, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        """, (user_id, username, first_name, last_name, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         
         self.conn.commit()
 
@@ -169,104 +175,130 @@ class TicketDb:
         except Exception as e:
             logger.error(f"{inspect.currentframe().f_code.co_name}\nОшибка при добавлении оценки тикету: {e}")
             return None
+    
+
+class PackedData:
+
+    def __init__(self, console_id=None, sell_date=None, tg_id=None, warranty_id=None, approval_date=None):
+        self.console_id = console_id
+        self.sell_date = sell_date
+        self.tg_id = tg_id
+        self.warranty_id = warranty_id
+        self.approval_date = approval_date
+    
+    async def exist(self):
+        if self.console_id:
+            return True
+        else:
+            return False
+    
+    async def sold(self):
+        if self.sell_date:
+            return True
+        else:
+            return False
+    
+    async def bound(self):
+        if self.tg_id:
+            return True
+        else:
+            return False
+        
+    async def approved(self):
+        if self.approval_date:
+            return True
+        else:
+            return False
 
 
 class WarrantyDb:
-    def __init__(self):
-        logger.info("Инициализация базы данных гарантий")
-        try:
-            scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-            creds = ServiceAccountCredentials.from_json_keyfile_name("resources/sheets_credentials.json", scope)
-            client = gspread.authorize(creds)
-            spreadsheet_url = os.getenv("WARRANTY_DB_URL")
-            spreadsheet_id = spreadsheet_url.split("/d/")[1].split("/")[0]
-            self.warranty_db_table = client.open_by_key(spreadsheet_id)
-            logger.info("База данных гарантий успешно инициализирована")
-        except Exception as e:
-            logger.error(f"{inspect.currentframe().f_code.co_name}\nОшибка при инициализации базы данных гарантий: {e}")
-            return None 
-        
-    def get_console_data(self, console_id):
-        try:
-            data = self.warranty_db_table.get_worksheet_by_id(0).get_all_records()
-            for index, row in enumerate(data, start=2):
-                if str(console_id) == str(row["console id"]):
-                    return (index, row)
-            return None
-        except Exception as e:
-            logger.error(f"{inspect.currentframe().f_code.co_name}\nОшибка при получении данных о консоли {console_id}")
-            return None
+    def __init__(self, db_name='resources/warranty.db'):
+        self.db_name = db_name
+        self.conn = sqlite3.connect(self.db_name)
+        self.cursor = self.conn.cursor()
+        self.create_tables()
+    
+    def create_tables(self):
+        self.cursor.execute('''
+        CREATE TABLE IF NOT EXISTS warranty (
+            console_id INTEGER NOT NULL UNIQUE,
+            sell_date TEXT,
+            tg_id TEXT,
+            warranty_id TEXT UNIQUE,
+            approval_date TEXT
+        )
+        ''')
+    
+    def _close(self):
+        if self.conn:
+            self.conn.close()
 
-    def warranty_approval_write(self, console_id, index=None):
-        if not index:
-            index, _ = self.get_console_data(console_id)
-        try:
-            range = f"E{index}:F{index}"
-            date = datetime.now().strftime("%d.%m.%Y")
-            self.warranty_db_table.get_worksheet_by_id(0).update(range, [[date, "1"]])
-            return 1
-        except Exception as e:
-            logger.error(f"{inspect.currentframe().f_code.co_name}\nОшибка при обновлении статуса гарантии для консоли {console_id}")
-            return None
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._close()
+    
+    def _get_warranty_id(self, console_id):
+        result = ''.join(re.findall(r'\d+', console_id))
+        return result
 
-    def generate_warranty_id(self, console_id):
+    def _commit_changes(self):
         try:
-            data = self.warranty_db_table.get_worksheet_by_id(0).get_all_records()
-            if self.get_console_data(console_id):
-                logger.info(f"Генерация когда гарантии для консоли {console_id}")
-                characters = (string.ascii_letters).upper()
-                while True:
-                    code = "".join(random.choice(characters) for _ in range(8))
-                    if not any(row["warranty id"] == code for row in data):
-                        break
-                return code
-        except Exception as e:
-            logger.error(f"{inspect.currentframe().f_code.co_name}\nОшибка при генерации кода гарантии для консоли {console_id}: {e}")
-            return None
+            self.conn.commit()
+            return True
+        except:
+            self.conn.rollback()
+            return False
         
-    def bind_console_to_user(self, console_id, console_index, user_id, warranty_id):
-        """
-        Привязка консоли к пользователю, заполнение полей "tg id", "warranty id" и "warranty check" в базе гарантий
-    
-        Args:
-            console_id: ID консоли
-            console_index: индекс консоли в таблице
-            user_id: tg ID пользователя
-            warranty_id: код гарантии
-        Returns:
-            1 - привязка прошла успешно
-            None - привязка не удалась
-        """
-        try:
-            logger.info(f"Привязка консоли {console_id} к пользователю {user_id}")
-            range = f"C{console_index}:F{console_index}"
-            self.warranty_db_table.get_worksheet_by_id(0).update(range, [[user_id, warranty_id, "", "0"]])
-            return 1
-        except Exception as e:
-            logger.error(f"{inspect.currentframe().f_code.co_name}\nОшибка при привязке консоли {console_id} к пользователю {user_id}: {e}")
-            return None
-    
-    def warranty_check(self, console_id):
-        """
-        Проверка статуса гарантии консоли по коду
-    
-        Args:
-            console_code: Код консоли для проверки
-            
-        Returns:
-            list: [текст сообщения, <class "function"> для получения клавиатуры]
-        """
-        console_index, console_data = self.get_console_data(console_id)
-        if console_data:
-            if str(console_data["warranty check"]) == "1":
-                registration_date = datetime.strptime(console_data["sell date"], "%d.%m.%Y")
-                warranty_end = registration_date + timedelta(days=int(os.getenv("WARRANTY_DURATION")) + int(os.getenv("WARRANTY_COMPENSATION")))
-                remaining_days = (warranty_end - datetime.now()).days
-                if remaining_days <= 0:
-                    return [f"❌ Ваша гарантия истекла.", keyboards.get_main_menu_keyboard]
-                else:
-                    return [f"✅ Ваша гарантия подтверждена и активна. Осталось дней гарантии: {remaining_days}", keyboards.get_main_menu_keyboard]
-            else:
-                return [f'⏹Ваша гарантия не подтверждена. Для подтверждения выберите пункт "📝 Отправить отзыв на проверку"', keyboards.get_warranty_keyboard]
+    def _pack_data(self, data):
+        if data:
+            return PackedData(data[0], data[1], data[2], data[3], data[4])
         else:
-            return None
+            return PackedData()
+
+    def get_packed(self, console_id):
+        console_data = self._pack_data(self.get_raw(console_id))
+        return console_data
+        
+    def get_raw(self, console_id):
+        self.cursor.execute('SELECT * FROM warranty WHERE console_id = ?', (console_id,))
+        data = self.cursor.fetchone()
+        return data
+    
+    def add_console(self, console_id, sell_date=None):
+            self.cursor.execute('INSERT OR IGNORE INTO warranty (console_id, sell_date, tg_id, warranty_id, approval_date) VALUES (?, ?, ?, ?, ?)', (console_id, sell_date, None, None, None))
+            return self._commit_changes() 
+    
+    def remove_console(self, console_id):
+        self.cursor.execute('DELETE FROM warranty WHERE console_id = ?', (console_id,))
+        return self._commit_changes()
+    
+    def sell_console(self, console_id, date = None):
+        if not date:
+            date = datetime.date.today().strftime('%d-%m-%Y')
+        self.cursor.execute('UPDATE warranty SET sell_date = ? WHERE console_id = ?', (date, console_id))
+        return self._commit_changes()
+    
+    def unsell_console(self, console_id):
+        self.cursor.execute('UPDATE warranty SET sell_date = ?, tg_id = ?, warranty_id = ?, approval_date = ? WHERE console_id = ?', (None, None, None, None, console_id))
+        return self._commit_changes()
+        
+    def bind_warranty(self, console_id, tg_id):
+        warranty_id = self._get_warranty_id(console_id)
+        self.cursor.execute('UPDATE warranty SET tg_id = ?, warranty_id = ? WHERE console_id = ?', (tg_id, warranty_id, console_id))
+        return self._commit_changes()
+    
+    def unbind_warranty(self, console_id):
+        self.cursor.execute('UPDATE warranty SET tg_id = ?, warranty_id = ?, approval_date = ? WHERE console_id = ?', (None, None, None, console_id))
+        return self._commit_changes()
+
+    def approve_warranty(self, console_id, date = None):
+        if not date:
+            date = datetime.date.today().strftime('%d-%m-%Y')
+        self.cursor.execute('UPDATE warranty SET approval_date = ? WHERE console_id = ?', (date, console_id))
+        return self._commit_changes()
+    
+    def unapprove_warranty(self, console_id):
+        self.cursor.execute('UPDATE warranty SET approval_date = ? WHERE console_id = ?', (None, console_id))
+        return self._commit_changes()
