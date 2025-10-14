@@ -6,6 +6,11 @@ REQUIREMENTS="requirements.txt"
 apt-get update
 pip install --upgrade pip --root-user-action ignore
 apt install git -y
+apt-get update && apt-get install -y \
+    python3-dev \
+    gcc \
+    linux-headers-generic \
+    && rm -rf /var/lib/apt/lists/*
 
 echo "Checking updates"
 git init
