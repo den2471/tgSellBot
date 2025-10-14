@@ -1,3 +1,5 @@
 media/*
 resources/*
 .gitignore
+test.py
+todo.txt
