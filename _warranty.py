@@ -64,6 +64,7 @@ class _warranty:
 
     warranty_duration = int(os.getenv('WARRANTY_DURATION'))
     delivery_compensation = int(os.getenv('WARRANTY_COMPENSATION'))
+    warranty_bind_period = int(os.getenv('WARRANTY_BIND_PERIOD'))
     
     async def _open_warranty_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
@@ -88,6 +89,16 @@ class _warranty:
         warranty_end = registration_date + timedelta(days=_warranty.warranty_duration + _warranty.delivery_compensation)
         remaining_days = (warranty_end - datetime.now()).days
         return remaining_days
+        
+    
+    async def _check_bind_period(data: PacketData):
+        sell_date = datetime.strptime(data.sell_date, '%d-%m-%Y')
+        period_end = sell_date + timedelta(days=_warranty.warranty_bind_period)
+        remaining_days = (period_end - datetime.now()).days
+        if remaining_days <= 0:
+            return False
+        else:
+            return True
 
     async def console_id_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
@@ -178,7 +189,7 @@ class _warranty:
                 remaining_days = await _warranty._check_remainig(console)
                 if remaining_days > 0:
                     await update.message.reply_text(
-                        f"✅ Ваша гарантия подтверждена и активна. Осталось дней: {remaining_days}",
+                        f"✅ Ваша гарантия подтверждена и активна. Осталось дней: {remaining_days}.",
                         reply_markup=keyboards.back_to_main_menu()
                     )
                     return states.WAITING_FOR_ACTION
@@ -200,6 +211,14 @@ class _warranty:
                     return states.WAITING_FOR_PHOTO_CHECK
                 else:
                     if await console.sold():
+                        if await _warranty._check_bind_period(console):
+                            pass
+                        else:
+                            await update.message.reply_text(
+                                "➖ С момента покупки прошло больше 90 дней. Для регистрации гарантии пожалуйста обратитесь в поддержку.",
+                                reply_markup=keyboards.back_to_main_menu()
+                            )
+                            return states.WAITING_FOR_ACTION
                         if warranty_db.bind_warranty(console_id, user_id):
                             console = warranty_db.get_packed(console_id)
                             await update.message.reply_text(

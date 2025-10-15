@@ -78,7 +78,7 @@ class Utility:
             "Пример:\n" \
             "<b>/data ATJ10561484807</b>\n" \
             "\n" \
-            "<code>[код консоли]</code> - добавить консоль в базу данных\n" \
+            "<code>[код консоли]</code> - добавить консоль в базу данных и пометить как проданную сегодня\n" \
             "Пример:\n" \
             "<b>ATJ10561484807</b>\n" \
             "\n" \
@@ -370,8 +370,8 @@ class ConsoleCodes:
             if await console.exist():
                 await update.message.reply_text('➖ Консоль уже есть в базе')
             else:
-                if warranty_db.add_console(console_id):
-                    await update.message.reply_text('✅ Консоль успешно добавлена в базу')
+                if warranty_db.add_console(console_id) and warranty_db.sell_console(console_id):
+                    await update.message.reply_text('✅ Консоль успешно добавлена в базу и помечена как проданная')
                 else:
                     await update.message.reply_text('❌ Произошла ошибка при внесении изменений в базу')
     
