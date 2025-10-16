@@ -175,9 +175,9 @@ class SupportManager:
         if await SupportManager._check_thread(update):
             try:
                 try:
-                    re_code = re.match(r'(?i)^/direct_reply ('+Format.tg_id+') (.+)', update.message.text)
+                    re_code = re.match(r'(?i)^/direct_reply ('+Format.tg_id+r')\s+(.+)', update.message.text)
                 except:
-                    re_code = re.match(r'(?i)^/direct_reply ('+Format.tg_id+') (.+)', update.message.caption)
+                    re_code = re.match(r'(?i)^/direct_reply ('+Format.tg_id+r')\s+(.+)', update.message.caption)
                 user_id = re_code.group(1)
                 message_text = re_code.group(2)
 
@@ -234,12 +234,12 @@ class SupportManager:
         if await SupportManager._check_thread(update):
             try:
                 try:
-                    re_code = re.match(r'(?i)^/reply ('+Format.tg_id+r') (\d+) (.+)', update.message.text)
+                    re_code = re.match(r'(?i)^/reply ('+Format.tg_id+r') (\d+)\s+(.+)', update.message.text)
                 except:
-                    re_code = re.match(r'(?i)^/reply ('+Format.tg_id+r') (\d+) (.+)', update.message.caption)
+                    re_code = re.match(r'(?i)^/reply ('+Format.tg_id+r') (\d+)\s+(.+)', update.message.caption)
                 user_id = int(re_code.group(1))
                 ticket_id = int(re_code.group(2))
-                response_text = re_code.group(2)
+                response_text = re_code.group(3)
                 
                 photo = update.message.photo[-1] if update.message.photo else None
                 video = update.message.video if update.message.video else None

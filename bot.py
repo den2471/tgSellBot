@@ -143,11 +143,11 @@ def main():
             managers.SupportManager.manual_warranty_approval))
 
         application.add_handler(MessageHandler(
-            (filters.Regex(r'(?i)^/reply '+Format.tg_id+r' \d+ .+') | filters.CaptionRegex(r'(?i)^/reply '+Format.tg_id+r' \d+ .+')) & filters.Chat(SUPPORT_GROUP_ID), 
+            (filters.Regex(r'(?is)^/reply '+Format.tg_id+r' \d+\s+.+') | filters.CaptionRegex(r'(?i)^/reply '+Format.tg_id+r' \d+\s+.+')) & filters.Chat(SUPPORT_GROUP_ID), 
             managers.SupportManager.ticket_response))
         
         application.add_handler(MessageHandler(
-            (filters.Regex(r'(?i)^/direct_reply '+Format.tg_id+r' .+') | filters.CaptionRegex(r'(?i)^/direct_reply '+Format.tg_id+r' .+')) & filters.Chat(SUPPORT_GROUP_ID), 
+            (filters.Regex(r'(?is)^/direct_reply '+Format.tg_id+r'\s+.+') | filters.CaptionRegex(r'(?is)^/direct_reply '+Format.tg_id+r'\s+.+')) & filters.Chat(SUPPORT_GROUP_ID), 
             managers.SupportManager.direct_reply))
 
         logger.info("Обработчики добавлены")
