@@ -84,7 +84,7 @@ class MediaManager:
                 return
 
         file_names = ["".join([self.ad_path, "/", f]) for f in os.listdir(self.ad_path) 
-                if f.lower().endswith((".png", ".jpg", ".jpeg", ".mp4"))]
+                if f.lower().endswith((".png", ".jpg", ".jpeg", ".mp4", ".avi", ".mov", ".mkv"))]
         index = 0
         for file in file_names:
             index += 1
@@ -99,7 +99,7 @@ class MediaManager:
                     extention = 'pic'
                 else:
                     logger.error(f"{inspect.currentframe().f_code.co_name} - {inspect.currentframe().f_lineno}\nНе удалось загрузить файл {file}. Расширение файла не поддерживается.\n" \
-                                "Поддерживаемые расширения png, jpg, jpeg, mp4")
+                                "Поддерживаемые расширения png, jpg, jpeg, mp4, avi, mov, mkv")
                     continue
                 time.sleep(.5)
                 self.advert_media[index] = {"data": file_id, "extention": extention}
