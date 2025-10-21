@@ -32,18 +32,21 @@ class MediaManager:
     def _start_update_thread(self):
         """Запускает поток для периодического обновления медиафайлов"""
         def update_thread():
+
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
             while True:
                 try:
                     current_time = time.time()
                     if current_time - self.last_update >= self.update_interval:
                         logger.info("Обновление списка медиафайлов...")
-                        loop = asyncio.get_event_loop()
-                        if loop.is_running():
-                            loop.create_task(self._load_ad())
-                            loop.create_task(self._load_licence())
-                        else:
-                            loop.run_until_complete(self._load_ad())
-                            loop.run_until_complete(self._load_licence())
+
+                        loop.run_until_complete(asyncio.gather(
+                            self._load_ad(),
+                            self._load_licence(),
+                            return_exceptions=True))
+                        
                         self.last_update = current_time
                 except Exception as e:
                     logger.error(f"{inspect.currentframe().f_code.co_name} - {inspect.currentframe().f_lineno}\nОшибка при обновлении медиафайлов: {e}")
