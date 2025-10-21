@@ -4,6 +4,7 @@ services:
     container_name: semi_docker
     volumes:
       - ./:/usr/src/app
+    restart: unless-stopped
     # volumes:
     #   - ./media:/usr/src/app/media:ro
     #   - ./resources:/usr/src/app/resources:rw
