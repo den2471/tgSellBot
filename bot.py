@@ -39,125 +39,127 @@ logger.info("Переменные загружены из resources/")
 import states
 import telegram
 import managers
+import media_handler
 
-def main():
-    try:
-        token = os.getenv('TELEGRAM_BOT_TOKEN')
-        logger.info(f"Загружен токен бота: ***{token[-10:]}")
-        
-        if not token:
-            logger.error(f"{inspect.currentframe().f_code.co_name} - {inspect.currentframe().f_lineno}\nТокен бота не найден в файле .env")
-            return
+class Main:
+    def __init__(self):
+        try:
+            token = os.getenv('TELEGRAM_BOT_TOKEN')
+            logger.info(f"Загружен токен бота: ***{token[-10:]}")
+            
+            if not token:
+                logger.error(f"{inspect.currentframe().f_code.co_name} - {inspect.currentframe().f_lineno}\nТокен бота не найден в файле .env")
+                return
 
-        application = Application.builder().token(token).build()
-        logger.info("Приложение бота успешно создано")
-        
-        conv_handler = ConversationHandler(
-            entry_points=[CommandHandler('start', managers.UserConversation.start, filters=filters.ChatType.PRIVATE), CallbackQueryHandler(managers.UserConversation.button_handler)],
-            states={
-                states.WAITING_FOR_LICENCE_ACCEPT: [
-                    CallbackQueryHandler(managers.UserConversation.licence_accept_handler)
-                ],
-                states.WAITING_FOR_ACTION: [
-                    CallbackQueryHandler(managers.UserConversation.button_handler)
-                ],
-                states.WAITING_FOR_TICKET_DESCRIPTION: [
-                    MessageHandler(
-                        filters.PHOTO | filters.VIDEO | filters.Document.ALL | filters.TEXT & ~filters.COMMAND,
-                        managers.UserConversation.Support.handle_ticket_description
-                    ),
-                    CallbackQueryHandler(managers.UserConversation.button_handler)
-                ],
-                states.WAITING_FOR_PHONE: [
-                    MessageHandler(filters.TEXT & ~filters.COMMAND, managers.UserConversation.Support.handle_phone)
-                ],
-                states.WAITING_FOR_WARRANTY_CHECK: [
-                    MessageHandler(
-                        filters.TEXT & ~filters.COMMAND, managers.UserConversation.Warranty.warranty_check
-                    ),
-                    CallbackQueryHandler(managers.UserConversation.button_handler)
-                ],
-                states.WAITING_FOR_PHOTO_CHECK: [
-                    MessageHandler(
-                        filters.PHOTO, managers.UserConversation.Warranty.check_review_photo
-                    ),
-                    CallbackQueryHandler(managers.UserConversation.button_handler)
-                ]
-            },
-            fallbacks=[CommandHandler('start', managers.UserConversation.start)],
-            per_message=False,
-        )
-        
-        application.add_handler(conv_handler)
-        
-        application.add_handler(MessageHandler(
-            filters.Regex(r'(?i)^/id$') & filters.Chat(SUPPORT_GROUP_ID), 
-            managers.Utility.get_thread_id))
-        
-        application.add_handler(MessageHandler(
-            filters.Regex(r'(?i)^/help$') & filters.Chat(SUPPORT_GROUP_ID), 
-            managers.Utility.help))
-        
-        application.add_handler(MessageHandler(
-            filters.Regex(r'(?i)^'+Format.console_code+r'$') & ~filters.COMMAND & filters.Chat(SUPPORT_GROUP_ID), 
-            managers.ConsoleCodes.add_console_code))
+            self.application = Application.builder().token(token).build()
+            
+            self.media_handler = media_handler.MediaManager(self.application.bot)
 
-        application.add_handler(MessageHandler(
-            filters.Regex(r'(?i)^/data '+Format.console_code+r'$') & filters.Chat(SUPPORT_GROUP_ID), 
-            managers.ConsoleCodes.get_data))
-        
-        application.add_handler(MessageHandler(
-            filters.Regex(r'(?i)^/remove '+Format.console_code+r'$') & filters.Chat(int(SUPPORT_GROUP_ID)), 
-            managers.ConsoleCodes.remove_console))
-        
-        application.add_handler(MessageHandler(
-            (filters.Regex(r'(?i)^/sell '+Format.console_code+r'$') | filters.Regex(r'(?i)^/sell '+Format.console_code+r' '+Format.date_raw+r'$')) & filters.Chat(int(SUPPORT_GROUP_ID)), 
-            managers.ConsoleCodes.sell_console))
-        
-        application.add_handler(MessageHandler(
-            filters.Regex(r'(?i)^/unsell '+Format.console_code+r'$') & filters.Chat(int(SUPPORT_GROUP_ID)), 
-            managers.ConsoleCodes.unsell_console))
-        
-        application.add_handler(MessageHandler(
-            filters.Regex(r'(?i)^/bind '+Format.console_code+r' '+Format.tg_id+r'$') & filters.Chat(int(SUPPORT_GROUP_ID)), 
-            managers.ConsoleCodes.bind_warranty))
-        
-        application.add_handler(MessageHandler(
-            filters.Regex(r'(?i)^/unbind '+Format.console_code+r'$') & filters.Chat(int(SUPPORT_GROUP_ID)), 
-            managers.ConsoleCodes.unbind_warranty))
-        
-        application.add_handler(MessageHandler(
-            (filters.Regex(r'(?i)^/approve '+Format.console_code+r'$') | filters.Regex(r'(?i)^/approve '+Format.console_code+r' '+Format.date_raw+r'$')) & filters.Chat(int(SUPPORT_GROUP_ID)), 
-            managers.ConsoleCodes.approve))
-        
-        application.add_handler(MessageHandler(
-            filters.Regex(r'(?i)^/unapprove '+Format.console_code+r'$') & filters.Chat(int(SUPPORT_GROUP_ID)), 
-            managers.ConsoleCodes.unapprove))
+            managers.media_manager = self.media_handler
+            
+            conv_handler = ConversationHandler(
+                entry_points=[CommandHandler('start', managers.UserConversation.start, filters=filters.ChatType.PRIVATE), CallbackQueryHandler(managers.UserConversation.button_handler)],
+                states={
+                    states.WAITING_FOR_LICENCE_ACCEPT: [
+                        CallbackQueryHandler(managers.UserConversation.licence_accept_handler)
+                    ],
+                    states.WAITING_FOR_ACTION: [
+                        CallbackQueryHandler(managers.UserConversation.button_handler)
+                    ],
+                    states.WAITING_FOR_TICKET_DESCRIPTION: [
+                        MessageHandler(
+                            filters.PHOTO | filters.VIDEO | filters.Document.ALL | filters.TEXT & ~filters.COMMAND,
+                            managers.UserConversation.Support.handle_ticket_description
+                        ),
+                        CallbackQueryHandler(managers.UserConversation.button_handler)
+                    ],
+                    states.WAITING_FOR_PHONE: [
+                        MessageHandler(filters.TEXT & ~filters.COMMAND, managers.UserConversation.Support.handle_phone)
+                    ],
+                    states.WAITING_FOR_WARRANTY_CHECK: [
+                        MessageHandler(
+                            filters.TEXT & ~filters.COMMAND, managers.UserConversation.Warranty.warranty_check
+                        ),
+                        CallbackQueryHandler(managers.UserConversation.button_handler)
+                    ],
+                    states.WAITING_FOR_PHOTO_CHECK: [
+                        MessageHandler(
+                            filters.PHOTO, managers.UserConversation.Warranty.check_review_photo
+                        ),
+                        CallbackQueryHandler(managers.UserConversation.button_handler)
+                    ]
+                },
+                fallbacks=[CommandHandler('start', managers.UserConversation.start)],
+                per_message=False,
+            )
+            
+            self.application.add_handler(conv_handler)
+            
+            self.application.add_handler(MessageHandler(
+                filters.Regex(r'(?i)^/id$') & filters.Chat(SUPPORT_GROUP_ID), 
+                managers.Utility.get_thread_id))
+            
+            self.application.add_handler(MessageHandler(
+                filters.Regex(r'(?i)^/help$') & filters.Chat(SUPPORT_GROUP_ID), 
+                managers.Utility.help))
+            
+            self.application.add_handler(MessageHandler(
+                filters.Regex(r'(?i)^'+Format.console_code+r'$') & ~filters.COMMAND & filters.Chat(SUPPORT_GROUP_ID), 
+                managers.ConsoleCodes.add_console_code))
 
-        application.add_handler(MessageHandler(
-            filters.Regex(r'(?i)^/newsletter .+') & filters.Chat(SUPPORT_GROUP_ID),
-            managers.SupportManager.newsletter))
-        
-        application.add_handler(MessageHandler(
-            filters.Regex(r'(?i)^/approve_warranty '+Format.console_code+r'$') & filters.Chat(SUPPORT_GROUP_ID),
-            managers.SupportManager.manual_warranty_approval))
+            self.application.add_handler(MessageHandler(
+                filters.Regex(r'(?i)^/data '+Format.console_code+r'$') & filters.Chat(SUPPORT_GROUP_ID), 
+                managers.ConsoleCodes.get_data))
+            
+            self.application.add_handler(MessageHandler(
+                filters.Regex(r'(?i)^/remove '+Format.console_code+r'$') & filters.Chat(int(SUPPORT_GROUP_ID)), 
+                managers.ConsoleCodes.remove_console))
+            
+            self.application.add_handler(MessageHandler(
+                (filters.Regex(r'(?i)^/sell '+Format.console_code+r'$') | filters.Regex(r'(?i)^/sell '+Format.console_code+r' '+Format.date_raw+r'$')) & filters.Chat(int(SUPPORT_GROUP_ID)), 
+                managers.ConsoleCodes.sell_console))
+            
+            self.application.add_handler(MessageHandler(
+                filters.Regex(r'(?i)^/unsell '+Format.console_code+r'$') & filters.Chat(int(SUPPORT_GROUP_ID)), 
+                managers.ConsoleCodes.unsell_console))
+            
+            self.application.add_handler(MessageHandler(
+                filters.Regex(r'(?i)^/bind '+Format.console_code+r' '+Format.tg_id+r'$') & filters.Chat(int(SUPPORT_GROUP_ID)), 
+                managers.ConsoleCodes.bind_warranty))
+            
+            self.application.add_handler(MessageHandler(
+                filters.Regex(r'(?i)^/unbind '+Format.console_code+r'$') & filters.Chat(int(SUPPORT_GROUP_ID)), 
+                managers.ConsoleCodes.unbind_warranty))
+            
+            self.application.add_handler(MessageHandler(
+                (filters.Regex(r'(?i)^/approve '+Format.console_code+r'$') | filters.Regex(r'(?i)^/approve '+Format.console_code+r' '+Format.date_raw+r'$')) & filters.Chat(int(SUPPORT_GROUP_ID)), 
+                managers.ConsoleCodes.approve))
+            
+            self.application.add_handler(MessageHandler(
+                filters.Regex(r'(?i)^/unapprove '+Format.console_code+r'$') & filters.Chat(int(SUPPORT_GROUP_ID)), 
+                managers.ConsoleCodes.unapprove))
 
-        application.add_handler(MessageHandler(
-            (filters.Regex(r'(?is)^/reply '+Format.tg_id+r' \d+\s+.+') | filters.CaptionRegex(r'(?i)^/reply '+Format.tg_id+r' \d+\s+.+')) & filters.Chat(SUPPORT_GROUP_ID), 
-            managers.SupportManager.ticket_response))
-        
-        application.add_handler(MessageHandler(
-            (filters.Regex(r'(?is)^/direct_reply '+Format.tg_id+r'\s+.+') | filters.CaptionRegex(r'(?is)^/direct_reply '+Format.tg_id+r'\s+.+')) & filters.Chat(SUPPORT_GROUP_ID), 
-            managers.SupportManager.direct_reply))
+            self.application.add_handler(MessageHandler(
+                filters.Regex(r'(?i)^/newsletter .+') & filters.Chat(SUPPORT_GROUP_ID),
+                managers.SupportManager.newsletter))
+            
+            self.application.add_handler(MessageHandler(
+                filters.Regex(r'(?i)^/approve_warranty '+Format.console_code+r'$') & filters.Chat(SUPPORT_GROUP_ID),
+                managers.SupportManager.manual_warranty_approval))
 
-        logger.info("Обработчики добавлены")
+            self.application.add_handler(MessageHandler(
+                (filters.Regex(r'(?is)^/reply '+Format.tg_id+r' \d+\s+.+') | filters.CaptionRegex(r'(?i)^/reply '+Format.tg_id+r' \d+\s+.+')) & filters.Chat(SUPPORT_GROUP_ID), 
+                managers.SupportManager.ticket_response))
+            
+            self.application.add_handler(MessageHandler(
+                (filters.Regex(r'(?is)^/direct_reply '+Format.tg_id+r'\s+.+') | filters.CaptionRegex(r'(?is)^/direct_reply '+Format.tg_id+r'\s+.+')) & filters.Chat(SUPPORT_GROUP_ID), 
+                managers.SupportManager.direct_reply))
+            
+            self.application.run_polling(allowed_updates=Update.ALL_TYPES)
+            
+        except telegram.error.Conflict:
+            logger.error(f"{inspect.currentframe().f_code.co_name} - {inspect.currentframe().f_lineno}\nОбнаружен конфликт: возможно, запущено несколько экземпляров бота")
+            sys.exit(1)
         
-        logger.info("Запуск бота...")
-        application.run_polling(allowed_updates=Update.ALL_TYPES)
-        
-    except telegram.error.Conflict:
-        logger.error(f"{inspect.currentframe().f_code.co_name} - {inspect.currentframe().f_lineno}\nОбнаружен конфликт: возможно, запущено несколько экземпляров бота")
-        sys.exit(1)
-
 if __name__ == '__main__':
-    main() 
+    Main()

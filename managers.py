@@ -16,7 +16,7 @@ from media_handler import MediaManager
 from re_codes import Format
 
 logger = logging.getLogger(__name__)
-media_manager = MediaManager()
+media_manager: MediaManager = None
 tickets_db = TicketDb()
 warranty_db = WarrantyDb()
 
