@@ -140,7 +140,7 @@ class Main:
                 managers.ConsoleCodes.unapprove))
 
             self.application.add_handler(MessageHandler(
-                filters.Regex(r'(?i)^/newsletter .+') & filters.Chat(SUPPORT_GROUP_ID),
+                (filters.Regex(r'(?i)^/newsletter\s+.+') | filters.CaptionRegex(r'(?i)^/newsletter\s+.+')) & filters.Chat(SUPPORT_GROUP_ID),
                 managers.SupportManager.newsletter))
             
             self.application.add_handler(MessageHandler(

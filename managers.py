@@ -309,7 +309,14 @@ class SupportManager:
             return states.WAITING_FOR_TICKET_RESPONSE
 
     async def newsletter(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        message_text = re.match(r'(?i)^/newsletter (.+)', update.message.text).group(1)
+        try:
+            message_text = re.match(r'(?i)^/newsletter\s+(.+)', update.message.text).group(1)
+        except:
+            message_text = re.match(r'(?i)^/newsletter\s+(.+)', update.message.caption).group(1)
+
+        photo = update.message.photo[-1] if update.message.photo else None
+        video = update.message.video if update.message.video else None
+        document = update.message.document if update.message.document else None
         
         users = tickets_db.get_all_users()
         
@@ -318,10 +325,29 @@ class SupportManager:
         
         for user_id in users:
             try:
-                await context.bot.send_message(
-                    chat_id=user_id,
-                    text=message_text
-                )
+                if photo:
+                    await context.bot.send_photo(
+                        chat_id=user_id,
+                        caption=message_text,
+                        photo=photo
+                    )
+                elif video:
+                    await context.bot.send_video(
+                        chat_id=user_id,
+                        caption=message_text,
+                        video=video
+                    )
+                elif document:
+                    await context.bot.send_document(
+                        chat_id=user_id,
+                        caption=message_text,
+                        document=document
+                    )
+                else:
+                    await context.bot.send_message(
+                        chat_id=user_id,
+                        text=message_text
+                    )
                 success_count += 1
             except Exception as e:
                 logger.error(f"{inspect.currentframe().f_code.co_name} - {inspect.currentframe().f_lineno}\nОшибка при отправке рассылки пользователю {user_id}: {e}")
